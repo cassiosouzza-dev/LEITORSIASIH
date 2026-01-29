@@ -1,0 +1,63 @@
+{
+    "FAEC": {
+        "rows": [
+            "Mês/Ano",
+            "Hospital/Prestador",
+            "Financiamento",
+            "Subtipo FAEC",
+            "Credor"
+        ],
+        "cols": [],
+        "filters": {
+            "Financiamento": [
+                "FAEC"
+            ]
+        }
+    },
+    "_config_geral_": {
+        "ultimo_tema": "Cinzento"
+    },
+    "MAC MEDIA COMPLEX": {
+        "rows": [
+            "Mês/Ano",
+            "Hospital/Prestador",
+            "Complexidade",
+            "Financiamento",
+            "Credor"
+        ],
+        "cols": [],
+        "filters": {
+            "Financiamento": [
+                "MAC"
+            ],
+            "Complexidade": [
+                "MEDIA COMPLEXIDADE"
+            ]
+        }
+    },
+    "MAC ALTA COMPLEX": {
+        "rows": [
+            "Mês/Ano",
+            "Hospital/Prestador",
+            "Complexidade",
+            "Financiamento",
+            "Credor"
+        ],
+        "cols": [],
+        "filters": {
+            "Financiamento": [
+                "MAC"
+            ],
+            "Complexidade": [
+                "ALTA COMPLEXIDADE"
+            ]
+        }
+    },
+    "RESUMO (Total Produzido)": {
+        "rows": [
+            "Hospital/Prestador"
+        ],
+        "cols": [],
+        "filters": {}
+    }
+}

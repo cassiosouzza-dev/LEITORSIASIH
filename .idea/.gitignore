@@ -1,0 +1,49 @@
+# --- Python Padrão ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- Ambientes Virtuais (Virtual Envs) ---
+venv/
+.venv/
+env/
+
+# --- PyInstaller (Pastas de Build e Executável) ---
+# Ignora a pasta pesada onde fica o EXE final
+dist/
+# Ignora a pasta temporária de compilação
+build/
+# Ignora o arquivo de especificação (opcional, pode remover o # se quiser versionar o spec)
+*.spec
+
+# --- Arquivos de Logs e Erros ---
+*.log
+erro_log.txt
+
+# --- Dados do Usuário e Configurações Locais (NÃO SUBIR PRO GIT) ---
+# Ignora o histórico de arquivos recentes (caminhos do seu PC)
+recentes.json
+
+# Ignora modelos salvos localmente (se quiser compartilhar modelos, remova esta linha)
+templates.json
+
+# --- Arquivos de Dados (Entrada e Saída) ---
+# Ignora os PDFs do SUS (Dados Sensíveis/Pesados)
+*.pdf
+
+# Ignora planilhas geradas ou baixadas (Dados Sensíveis)
+*.xlsx
+*.xls
+*.csv
+*.xlsb
+
+# Exceção: Se você tiver algum excel de exemplo que QUEIRA subir, use:
+# !exemplo_layout.xlsx
+
+# --- IDEs (Configurações do Editor) ---
+.vscode/
+.idea/
+
+# --- Sistema Operacional ---
+Thumbs.db
+Desktop.ini
