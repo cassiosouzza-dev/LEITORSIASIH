@@ -430,3 +430,5 @@ def executar_extracao_completa(lista_arquivos, callback_update):
         return df[colunas_ordem]
     else:
         return pd.DataFrame()
+
+    #teste de push
