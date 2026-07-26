@@ -1,0 +1,81 @@
+"""Catálogo de temas visuais do app (ao estilo do seletor de temas do VS Code)."""
+
+TEMAS = {
+    "Claro": {
+        "bg_app": "#F5F6F8",
+        "bg_card": "#FFFFFF",
+        "bg_sidebar": "#FAFAFB",
+        "border": "#E1E4E8",
+        "border_strong": "#C9CDD3",
+        "text": "#1A1A1A",
+        "text_muted": "#6B7280",
+        "accent": "#007ACC",
+        "accent_hover": "#0063A5",
+        "accent_soft": "#EAF4FC",
+        "danger": "#C53030",
+        "danger_soft": "#FBE4E4",
+        "success": "#1E8E3E",
+    },
+    "Cinza Claro": {
+        "bg_app": "#E8E9EB",
+        "bg_card": "#F4F4F5",
+        "bg_sidebar": "#DEDFE1",
+        "border": "#C7C9CC",
+        "border_strong": "#AEB1B5",
+        "text": "#202124",
+        "text_muted": "#5F6368",
+        "accent": "#5C6BC0",  # índigo — diferencia do azul do tema Claro
+        "accent_hover": "#4453A8",
+        "accent_soft": "#E3E6F7",
+        "danger": "#C53030",
+        "danger_soft": "#F3D6D6",
+        "success": "#1E8E3E",
+    },
+    "Escuro": {
+        "bg_app": "#1E1E1E",
+        "bg_card": "#252526",
+        "bg_sidebar": "#2D2D30",
+        "border": "#3C3C3C",
+        "border_strong": "#4A4A4A",
+        "text": "#E6E6E6",
+        "text_muted": "#9AA0A6",
+        "accent": "#4FC3F7",  # ciano vivo — contraste forte no fundo escuro
+        "accent_hover": "#29B6F6",
+        "accent_soft": "#1E3A4A",
+        "danger": "#E06C6C",
+        "danger_soft": "#4A2A2A",
+        "success": "#4CAF6D",
+    },
+    "Solar": {  # Solarized Light
+        "bg_app": "#FDF6E3",
+        "bg_card": "#FFFCF2",
+        "bg_sidebar": "#EEE8D5",
+        "border": "#D9CFB0",
+        "border_strong": "#C2B590",
+        "text": "#586E75",
+        "text_muted": "#93A1A1",
+        "accent": "#2AA198",  # ciano solarizado — a cor de destaque clássica da paleta
+        "accent_hover": "#1F7A73",
+        "accent_soft": "#DCEEEB",
+        "danger": "#DC322F",
+        "danger_soft": "#F6E1E0",
+        "success": "#859900",
+    },
+    "Solar Escuro": {  # Solarized Dark
+        "bg_app": "#002B36",
+        "bg_card": "#073642",
+        "bg_sidebar": "#00212B",
+        "border": "#0A4A5A",
+        "border_strong": "#0F5A6E",
+        "text": "#93A1A1",
+        "text_muted": "#7C9393",
+        "accent": "#6C71C4",  # violeta solarizado — diferencia do ciano do Solar claro
+        "accent_hover": "#5A5FB0",
+        "accent_soft": "#241F42",
+        "danger": "#DC322F",
+        "danger_soft": "#4A1F1E",
+        "success": "#859900",
+    },
+}
+
+ORDEM_TEMAS = ["Claro", "Cinza Claro", "Escuro", "Solar", "Solar Escuro"]

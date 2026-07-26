@@ -3,7 +3,6 @@ import pandas as pd
 import re
 import os
 import unicodedata
-from openpyxl import load_workbook
 
 # ==============================================================================
 # 1. CONFIGURAÇÕES E MAPAS
@@ -433,41 +432,4 @@ def executar_extracao_completa(lista_arquivos, callback_update):
     else:
         return pd.DataFrame()
 
-
-# ==============================================================================
-# 5. EXPORTAÇÃO (FORMATAÇÃO DE EXCEL)
-# ==============================================================================
-def formatar_excel_como_tabela(filename):
-    try:
-        wb = load_workbook(filename)
-        for sheet in wb.sheetnames:
-            ws = wb[sheet]
-
-            # 1. Identifica colunas de valor
-            cols_moeda = []
-            for cell in ws[1]:
-                if cell.value and ("Valor" in str(cell.value) or "Total" in str(cell.value)):
-                    cols_moeda.append(cell.column)
-
-            for col in ws.columns:
-                max_length = 0
-                column_letter = col[0].column_letter
-                col_idx = col[0].column
-                is_currency = col_idx in cols_moeda
-
-                for cell in col:
-                    try:
-                        cell_val = str(cell.value) if cell.value is not None else ""
-                        if len(cell_val) > max_length:
-                            max_length = len(cell_val)
-                    except: pass
-
-                    if is_currency and cell.row > 1:
-                        cell.number_format = '"R$ "#,##0.00'
-
-                adjusted_width = (max_length + 3) * 1.1
-                ws.column_dimensions[column_letter].width = adjusted_width
-
-        wb.save(filename)
-    except Exception as e:
-        print(f"Erro ao formatar Excel: {e}")
+    #teste de push

@@ -30,23 +30,16 @@ import re
 # Bibliotecas para manipulação de fontes e ícones
 from tkinter.font import Font
 
-# Tenta importar openpyxl
-try:
-    from openpyxl import load_workbook
-    from openpyxl.utils import get_column_letter
-except ImportError:
-    pass
-
 # Tenta importar a lógica de extração
 try:
     # 1. Tenta importar da MESMA PASTA (o mais provável no seu caso)
-    from prod_SIA_SIH2xlsx import executar_extracao_completa
+    from prod_SIA_SIH2xlsx import executar_extracao_completa, formatar_excel_como_tabela
 
     print("SUCESSO: Extrator carregado da mesma pasta.")
 except ImportError:
     try:
         # 2. Se falhar, tenta importar da pasta 'modulos'
-        from modulos.prod_SIA_SIH2xlsx import executar_extracao_completa
+        from modulos.prod_SIA_SIH2xlsx import executar_extracao_completa, formatar_excel_como_tabela
 
         print("SUCESSO: Extrator carregado da pasta 'modulos'.")
     except ImportError as e:
@@ -62,6 +55,9 @@ except ImportError:
             callback(f"ERRO TÉCNICO: {str(e)}", 0)
             time.sleep(2)
             return pd.DataFrame()
+
+        def formatar_excel_como_tabela(filename):
+            pass
 
 # --- CONFIGURAÇÃO DE LOG ---
 logging.basicConfig(filename='erro_log.txt', level=logging.ERROR,
@@ -79,7 +75,7 @@ def log_exception(exc_type, exc_value, exc_traceback):
 sys.excepthook = log_exception
 
 # --- VISUAL ---
-ctk.set_appearance_mode("Dark")
+ctk.set_appearance_mode("Light")
 ctk.set_default_color_theme("dark-blue")
 
 # --- ÍCONES (Base64) ---
@@ -108,47 +104,6 @@ def resource_path(relative_path):
 # FUNÇÕES AUXILIARES
 # ==============================================================================
 
-# --- FORMATA EXCEL COMO TABELA (AUTO-AJUSTE DE COLUNAS E MOEDA) ---
-def formatar_excel_como_tabela(filename):
-    try:
-        wb = load_workbook(filename)
-        for sheet in wb.sheetnames:
-            ws = wb[sheet]
-            
-            # 1. Identifica colunas de valor
-            cols_moeda = []
-            for cell in ws[1]: 
-                if cell.value and ("Valor" in str(cell.value) or "Total" in str(cell.value)):
-                    cols_moeda.append(cell.column)
-
-            for col in ws.columns:
-                max_length = 0
-                column_letter = col[0].column_letter
-                col_idx = col[0].column
-                is_currency = col_idx in cols_moeda
-
-                for cell in col:
-                    try:
-                        # Pega o texto da célula
-                        cell_val = str(cell.value) if cell.value is not None else ""
-                        if len(cell_val) > max_length: 
-                            max_length = len(cell_val)
-                    except: pass
-                    
-                    # Formatação de Moeda
-                    if is_currency and cell.row > 1:
-                        cell.number_format = '"R$ "#,##0.00'
-
-                # LÓGICA DE AUTO-AJUSTE
-                # (max_length + 2) dá uma margem
-                # * 1.2 compensa a diferença entre largura de caractere e largura de coluna no Excel
-                adjusted_width = (max_length + 3) * 1.1
-                
-                # Aplica a largura sem limite máximo (para não cortar textos longos)
-                ws.column_dimensions[column_letter].width = adjusted_width
-                
-        wb.save(filename)
-    except Exception as e: print(f"Erro ao formatar Excel: {e}")
 # --- FUNÇÃO DE ÍCONE CORRIGIDA (SEM .ICO, USA PNG DIRETO) ---
 def aplicar_icone_global(janela):
     try:
@@ -262,7 +217,7 @@ class CTkToolTip:
         tw.wm_geometry(f"+{x}+{y}")
         
         # Cria o rótulo
-        label = tk.Label(tw, text=self.text, background="#1c1c1c", fg="white", 
+        label = tk.Label(tw, text=self.text, background="#2A2A2A", fg="white",
                          relief='solid', borderwidth=1, font=("Arial", 10))
         label.pack(ipadx=5, ipady=3)
 
@@ -375,9 +330,9 @@ class VisualizadorDinamico(IconedToplevel):
         
         # 2. Cores e Ícones
         self.colors = {
-            "bg_window": "#1E1E1E",     # Fundo Geral
-            "bg_sidebar": "#252526",    # Barra Lateral (estilo VS Code)
-            "bg_card": "#1E1E1E",       # Cards (mesma cor do fundo para limpar)
+            "bg_window": "#2B2B2E",     # Fundo Geral
+            "bg_sidebar": "#323235",    # Barra Lateral (estilo VS Code)
+            "bg_card": "#2B2B2E",       # Cards (mesma cor do fundo para limpar)
             "primary": "#007ACC",       # Azul Principal
             "text_muted": "#858585"     # Texto secundário
         }
@@ -439,10 +394,14 @@ class VisualizadorDinamico(IconedToplevel):
         self.grid_rowconfigure(1, weight=1)
 
         # Header
+        self.on_voltar = None  # Definido externamente por quem abriu esta janela
         self.header_frame = ctk.CTkFrame(self, fg_color=self.colors["bg_sidebar"], corner_radius=0, height=60)
         self.header_frame.grid(row=0, column=0, columnspan=3, sticky="nsew")
         self.header_frame.grid_propagate(False)
-        ctk.CTkLabel(self.header_frame, text=f"ANÁLISE PIVOT #{index_id}", font=("Segoe UI", 20, "bold"), text_color=self.colors["primary"]).pack(side="left", padx=20)
+        ctk.CTkButton(self.header_frame, text="< Voltar", font=("Segoe UI", 12), fg_color="transparent",
+                      border_width=1, border_color="#505050", hover_color="#3E3E42",
+                      width=90, height=32, command=self.voltar).pack(side="left", padx=(20, 10))
+        ctk.CTkLabel(self.header_frame, text=f"ANÁLISE PIVOT #{index_id}", font=("Segoe UI", 20, "bold"), text_color=self.colors["primary"]).pack(side="left", padx=10)
         ctk.CTkButton(self.header_frame, text="📥 Exportar Excel", fg_color="#2980B9", font=("Segoe UI", 12, "bold"), width=140, height=35, command=self.exportar).pack(side="right", padx=20)
 
         # Sidebar Esquerda
@@ -1022,19 +981,29 @@ class VisualizadorCompleto(IconedToplevel):
         style = ttk.Style()
         style.theme_use("clam")
         style.layout("Treeview", [('Treeview.treearea', {'sticky': 'nswe'})])
-        style.configure("Treeview", background="#1E1E1E", foreground="#E0E0E0", fieldbackground="#1E1E1E", rowheight=30, borderwidth=0)
+        style.configure("Treeview", background="#2B2B2E", foreground="#E0E0E0", fieldbackground="#2B2B2E", rowheight=30, borderwidth=0)
         style.map("Treeview", background=[('selected', '#264F78')], foreground=[('selected', 'white')]) # Azul VS Code
-        style.configure("Treeview.Heading", background="#252526", foreground="#CCCCCC", relief="flat", font=("Segoe UI", 9, "bold"))
-        style.map("Treeview.Heading", background=[('active', '#333333')])
-        
+        style.configure("Treeview.Heading", background="#323235", foreground="#CCCCCC", relief="flat", font=("Segoe UI", 9, "bold"))
+        style.map("Treeview.Heading", background=[('active', '#3E3E42')])
+
         # --- CABEÇALHO "SaaS" (Minimalista) ---
-        self.frm_header = ctk.CTkFrame(self, height=60, fg_color="#252526") # Cor de barra de ferramentas
+        self.on_voltar = None  # Definido externamente por quem abriu esta janela
+        self.frm_header = ctk.CTkFrame(self, height=60, fg_color="#323235") # Cor de barra de ferramentas
         self.frm_header.pack(fill="x")
         self.frm_header.pack_propagate(False)
-        
+
+        # 0. Botão Voltar (navegação de ida e volta entre as telas)
+        self.btn_voltar = ctk.CTkButton(
+            self.frm_header, text="< Voltar", font=("Segoe UI", 12),
+            fg_color="transparent", border_width=1, border_color="#505050",
+            hover_color="#3E3E42", width=90, height=32, corner_radius=6,
+            command=self.voltar
+        )
+        self.btn_voltar.pack(side="left", padx=(15, 5))
+
         # 1. Título Limpo
         lbl_titulo = ctk.CTkLabel(self.frm_header, text="Análise de Dados", font=("Segoe UI", 16, "bold"), text_color="white")
-        lbl_titulo.pack(side="left", padx=25)
+        lbl_titulo.pack(side="left", padx=10)
         
         # 2. Container BLINDADO (Lado Direito)
         fr_botoes = ctk.CTkFrame(self.frm_header, fg_color="transparent", width=420, height=40)
@@ -1145,6 +1114,13 @@ class VisualizadorCompleto(IconedToplevel):
                     vals.append(val)
             self.tree.insert("", "end", values=vals)
     
+    # --- VOLTAR PARA A TELA ANTERIOR ---
+    def voltar(self):
+        if self.on_voltar:
+            self.on_voltar()
+        else:
+            self.destroy()
+
     # --- NOVO: Lógica de Destaque dos Botões ---
     # NA CLASSE VisualizadorCompleto
     def destacar_botao(self, botao_selecionado):
@@ -1315,6 +1291,7 @@ class VisualizadorCompleto(IconedToplevel):
                 self.btn_dinamica.configure(cursor="hand2")
             
             win.protocol("WM_DELETE_WINDOW", ao_fechar_dinamica)
+            win.on_voltar = ao_fechar_dinamica  # Permite o botão "Voltar" da própria janela
 
         except Exception as e:
             self.deiconify()
@@ -1331,10 +1308,14 @@ class VisualizadorCompleto(IconedToplevel):
     def adicionar_serie_historica(self):
         nome_arquivo = "Serie_historica.xlsx"
         
-        # 1. Identifica o que estamos tentando salvar (quais Meses e Âmbitos tem na tabela atual)
+        # 1. Identifica o que estamos tentando salvar (quais Hospitais, Meses e
+        # Âmbitos tem na tabela atual). Inclui o hospital na chave: sem isso,
+        # subir dados de um hospital novo no mesmo mês/âmbito de outro já
+        # salvo apagaria por engano os dados do hospital antigo.
         try:
-            # Pega combinações únicas. Ex: [('01/2024', 'Hospitalar'), ('01/2024', 'Ambulatorial')]
-            novos_dados_resumo = self.df[["Mês/Ano", "Âmbito Serviço"]].drop_duplicates().values.tolist()
+            novos_dados_resumo = self.df[
+                ["Hospital/Prestador", "Mês/Ano", "Âmbito Serviço"]
+            ].drop_duplicates().values.tolist()
         except Exception:
             novos_dados_resumo = []
 
@@ -1348,13 +1329,18 @@ class VisualizadorCompleto(IconedToplevel):
                 df_hist = pd.read_excel(nome_arquivo)
                 
                 # Verifica se as colunas necessárias existem para comparar
-                if novos_dados_resumo and "Mês/Ano" in df_hist.columns and "Âmbito Serviço" in df_hist.columns:
+                colunas_chave = ["Hospital/Prestador", "Mês/Ano", "Âmbito Serviço"]
+                if novos_dados_resumo and all(c in df_hist.columns for c in colunas_chave):
                     conflitos = []
-                    for mes, ambito in novos_dados_resumo:
-                        # Filtra o histórico para ver se já tem esse par (Mês + Âmbito)
-                        filtro = (df_hist["Mês/Ano"] == mes) & (df_hist["Âmbito Serviço"] == ambito)
+                    for hospital, mes, ambito in novos_dados_resumo:
+                        # Filtra o histórico para ver se já tem esse hospital+mês+âmbito
+                        filtro = (
+                            (df_hist["Hospital/Prestador"] == hospital)
+                            & (df_hist["Mês/Ano"] == mes)
+                            & (df_hist["Âmbito Serviço"] == ambito)
+                        )
                         if not df_hist[filtro].empty:
-                            conflitos.append(f"- {ambito} de {mes}")
+                            conflitos.append(f"- {hospital} — {ambito} de {mes}")
                     
                     # Se achou conflito, muda a mensagem para AVISO
                     if conflitos:
@@ -1383,8 +1369,12 @@ class VisualizadorCompleto(IconedToplevel):
                 
                 if substituir and novos_dados_resumo:
                     # REMOVE os dados antigos que batem com os novos (Limpeza)
-                    for mes, ambito in novos_dados_resumo:
-                        mascara = ~((df_hist["Mês/Ano"] == mes) & (df_hist["Âmbito Serviço"] == ambito))
+                    for hospital, mes, ambito in novos_dados_resumo:
+                        mascara = ~(
+                            (df_hist["Hospital/Prestador"] == hospital)
+                            & (df_hist["Mês/Ano"] == mes)
+                            & (df_hist["Âmbito Serviço"] == ambito)
+                        )
                         df_hist = df_hist[mascara]
                 
                 # Junta o histórico (agora limpo) com os novos dados
@@ -1407,11 +1397,11 @@ class VisualizadorCompleto(IconedToplevel):
         except Exception as e:
             messagebox.showerror("Erro Crítico", f"Falha ao salvar:\n{e}", parent=self)
 
-# Extrator SUS - Extrator SIA/SIH        
+# Extrator SIA/SIH
 class ExtratorApp(IconedToplevel):
     def __init__(self, parent):
         super().__init__(parent)
-        self.title("Extrator SUS - Extrator SIA/SIH")
+        self.title("Extrator SIA/SIH")
         self.geometry("1100x600") # Aumentei a largura para caber o painel lateral
         
         # Centraliza a janela
@@ -1436,24 +1426,24 @@ class ExtratorApp(IconedToplevel):
         self.left_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.left_frame.grid(row=0, column=0, sticky="nsew", padx=30, pady=30)
         
-        ctk.CTkLabel(self.left_frame, text="Upload de Arquivos", font=("Segoe UI", 24, "bold"), text_color="white").pack(anchor="w", pady=(0, 5))
-        ctk.CTkLabel(self.left_frame, text="Arraste arquivos PDF ou selecione manualmente", font=("Segoe UI", 12), text_color="#888888").pack(anchor="w", pady=(0, 20))
+        ctk.CTkLabel(self.left_frame, text="Upload de Arquivos", font=("Segoe UI", 24, "bold"), text_color="#1A1A1A").pack(anchor="w", pady=(0, 5))
+        ctk.CTkLabel(self.left_frame, text="Arraste arquivos PDF ou selecione manualmente", font=("Segoe UI", 12), text_color="#777777").pack(anchor="w", pady=(0, 20))
 
         # Drop Area (Estilo "Tracejado" simulado com borda cinza)
-        self.drop_frame = ctk.CTkFrame(self.left_frame, border_width=2, border_color="#333333", fg_color="#1E1E1E", corner_radius=10)
-        self.drop_frame.pack(fill="both", expand=True, pady=(0, 20)) 
-        
-        self.lbl_drop = ctk.CTkLabel(self.drop_frame, text="Solte os arquivos aqui", font=("Segoe UI", 14), text_color="#666666")
+        self.drop_frame = ctk.CTkFrame(self.left_frame, border_width=2, border_color="#D5D5D5", fg_color="#F2F2F2", corner_radius=10)
+        self.drop_frame.pack(fill="both", expand=True, pady=(0, 20))
+
+        self.lbl_drop = ctk.CTkLabel(self.drop_frame, text="Solte os arquivos aqui", font=("Segoe UI", 14), text_color="#888888")
         self.lbl_drop.place(relx=0.5, rely=0.5, anchor="center")
-        
+
         self.list_frame = ctk.CTkScrollableFrame(self.drop_frame, fg_color="transparent")
-        
+
         # Botões de Ação (Minimalistas)
         btn_box = ctk.CTkFrame(self.left_frame, fg_color="transparent")
         btn_box.pack(pady=0, fill="x")
-        
-        ctk.CTkButton(btn_box, text="Selecionar Arquivos", width=160, height=35, fg_color="#333333", hover_color="#444444", command=self.add_manual).pack(side="left")
-        ctk.CTkButton(btn_box, text="Limpar Tudo", width=120, height=35, fg_color="transparent", text_color="#C53030", hover_color="#2B1111", command=self.limpar).pack(side="right")
+
+        ctk.CTkButton(btn_box, text="Selecionar Arquivos", width=160, height=35, fg_color="#E4E4E4", hover_color="#D6D6D6", text_color="#1A1A1A", command=self.add_manual).pack(side="left")
+        ctk.CTkButton(btn_box, text="Limpar Tudo", width=120, height=35, fg_color="transparent", text_color="#C53030", hover_color="#FBE4E4", command=self.limpar).pack(side="right")
         
         # Botão Processar (CTA - Call to Action)
         self.btn_run = ctk.CTkButton(self.left_frame, text="INICIAR PROCESSAMENTO", height=50, font=("Segoe UI", 14, "bold"), fg_color="#007ACC", hover_color="#0063A5", corner_radius=8, command=self.run)
@@ -1467,15 +1457,15 @@ class ExtratorApp(IconedToplevel):
         self.lbl.pack()
 
         # === PAINEL DIREITO: HISTÓRICO/RECENTES ===
-        self.right_frame = ctk.CTkFrame(self, width=500, corner_radius=0, fg_color="#181818")
+        self.right_frame = ctk.CTkFrame(self, width=500, corner_radius=0, fg_color="#EFEFEF")
         self.right_frame.grid(row=0, column=1, sticky="ns", padx=0, pady=0)
         self.right_frame.grid_propagate(True)
         # 1. CABEÇALHO (Fica no Topo)
         frm_head = ctk.CTkFrame(self.right_frame, fg_color="transparent")
         frm_head.pack(side="top", fill="x", padx=20, pady=(30, 10))
 
-        ctk.CTkLabel(frm_head, text="Recentes", font=("Segoe UI", 16, "bold"), text_color="#CCCCCC").pack(side="left")
-        ctk.CTkButton(frm_head, text="Limpar", width=60, height=20, font=("Segoe UI", 11), fg_color="transparent", text_color="#666", hover_color="#222", command=self.limpar_historico_recentes).pack(side="right")
+        ctk.CTkLabel(frm_head, text="Recentes", font=("Segoe UI", 16, "bold"), text_color="#333333").pack(side="left")
+        ctk.CTkButton(frm_head, text="Limpar", width=60, height=20, font=("Segoe UI", 11), fg_color="transparent", text_color="#777", hover_color="#E0E0E0", command=self.limpar_historico_recentes).pack(side="right")
 
         # 2. RODAPÉ DE BOTÕES (Fica Embaixo - Criamos primeiro para garantir o lugar dele)
         # Usamos side="bottom" para colar no chão da janela
@@ -1864,11 +1854,23 @@ class ExtratorApp(IconedToplevel):
                 # 2. Abre a janela de resultados (Dados Brutos)
                 try:
                     win = VisualizadorCompleto(self, df)
-                    
+
+                    # ESCONDE A JANELA MÃE (Modo Foco) - evita telas empilhadas
+                    self.withdraw()
+
+                    def ao_fechar_completo():
+                        win.destroy()
+                        self.deiconify()  # REAPARECE A MÃE
+                        self.lift()
+                        self.focus_force()
+
+                    win.protocol("WM_DELETE_WINDOW", ao_fechar_completo)
+                    win.on_voltar = ao_fechar_completo  # Permite o botão "Voltar" da própria janela
+
                     # Força a nova janela para frente
                     win.lift()
                     win.focus_force()
-                    
+
                     # Garante que ela fique no topo
                     win.after(200, lambda: win.lift())
                     win.after(200, lambda: win.focus_force())
@@ -1995,10 +1997,22 @@ class ExtratorApp(IconedToplevel):
                 df_hist["Valor"] = pd.to_numeric(df_hist["Valor"], errors='coerce').fillna(0.0)
             
             self.configure(cursor="")
-            
+
             # Abre o Visualizador Completo com os dados do histórico
-            VisualizadorCompleto(self, df_hist)
-            
+            win = VisualizadorCompleto(self, df_hist)
+
+            # ESCONDE A JANELA MÃE (Modo Foco) - evita telas empilhadas
+            self.withdraw()
+
+            def ao_fechar_completo():
+                win.destroy()
+                self.deiconify()  # REAPARECE A MÃE
+                self.lift()
+                self.focus_force()
+
+            win.protocol("WM_DELETE_WINDOW", ao_fechar_completo)
+            win.on_voltar = ao_fechar_completo  # Permite o botão "Voltar" da própria janela
+
         except Exception as e:
             self.configure(cursor="")
             messagebox.showerror("Erro", f"Erro ao abrir Série Histórica:\n{e}", parent=self)
