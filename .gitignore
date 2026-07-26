@@ -22,3 +22,9 @@ dist/
 # SO
 Thumbs.db
 .DS_Store
+
+# Dados/arquivos de exemplo e config local (podem conter dados reais sensíveis)
+*.json
+*.pdf
+*.xls
+*.xlsx

@@ -1,0 +1,1 @@
+pyinstaller --name "ExtratorSIASIH" --onefile --windowed --icon "extrator_icon.ico" --add-data "extrator_icon.ico;." --add-data "templates.json;." --add-data "recentes.json;." --add-data "Serie_historica.xlsx;." --add-data "ui_config.json;." main.py
