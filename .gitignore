@@ -1,0 +1,24 @@
+# Ambiente virtual
+.venv/
+venv/
+env/
+
+# Cache e bytecode Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Log de erros da aplicação
+erro_log.txt
+
+# Build/distribuição (PyInstaller)
+build/
+dist/
+*.spec
+
+# IDE
+.idea/
+
+# SO
+Thumbs.db
+.DS_Store
