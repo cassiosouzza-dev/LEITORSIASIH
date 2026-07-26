@@ -1,5 +1,6 @@
 """Janela principal: uma única janela com navegação interna (sem popups soltos)."""
 import json
+import logging
 import os
 import sys
 
@@ -14,6 +15,7 @@ from ui_qt import theme, temas
 
 
 def resource_path(relative_path):
+    """Caminho de recurso somente-leitura empacotado (ex.: ícone)."""
     try:
         base_path = sys._MEIPASS
     except AttributeError:
@@ -21,7 +23,22 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
-CONFIG_PATH = resource_path("ui_config.json")
+def dados_path(relative_path):
+    """Caminho de arquivo de dados do usuário (config, histórico, templates).
+
+    Em build via PyInstaller --onefile, sys._MEIPASS é uma pasta temporária
+    recriada e apagada a cada execução — gravar ali faz o histórico/tema
+    "sumirem" ao reabrir o app. Por isso aqui usamos a pasta do .exe (ou do
+    projeto, rodando a partir do código-fonte), que persiste entre execuções.
+    """
+    if getattr(sys, "frozen", False):
+        base_path = os.path.dirname(sys.executable)
+    else:
+        base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)
+
+
+CONFIG_PATH = dados_path("ui_config.json")
 
 
 def _carregar_tema_salvo():
@@ -30,8 +47,10 @@ def _carregar_tema_salvo():
             nome = json.load(f).get("tema")
             if nome in temas.TEMAS:
                 return nome
-    except Exception:
+    except FileNotFoundError:
         pass
+    except Exception:
+        logging.exception("Falha ao carregar tema salvo de %s", CONFIG_PATH)
     return temas.ORDEM_TEMAS[0]
 
 
@@ -40,7 +59,7 @@ def _salvar_tema(nome):
         with open(CONFIG_PATH, "w", encoding="utf-8") as f:
             json.dump({"tema": nome}, f, ensure_ascii=False)
     except Exception:
-        pass
+        logging.exception("Falha ao salvar tema em %s", CONFIG_PATH)
 
 
 class MainWindow(QMainWindow):

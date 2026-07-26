@@ -8,6 +8,17 @@ try:
 except Exception:
     pass
 
+import logging
+
+from ui_qt.main_window import dados_path
+
+logging.basicConfig(
+    filename=dados_path("erro_log.txt"),
+    level=logging.WARNING,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    encoding="utf-8",
+)
+
 from ui_qt.app import main
 
 if __name__ == "__main__":

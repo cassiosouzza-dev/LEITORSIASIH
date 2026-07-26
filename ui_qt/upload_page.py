@@ -1,5 +1,6 @@
 """Tela 1: Upload de Arquivos (drag&drop, seleção manual, recentes, processamento)."""
 import json
+import logging
 import os
 
 import pandas as pd
@@ -10,11 +11,11 @@ from PySide6.QtWidgets import (
     QProgressBar, QMessageBox, QSizePolicy,
 )
 
-from ui_qt.main_window import resource_path
+from ui_qt.main_window import dados_path
 from ui_qt.worker import iniciar_extracao
 
-HISTORICO_PATH = resource_path("recentes.json")
-SERIE_HISTORICA_PATH = resource_path("Serie_historica.xlsx")
+HISTORICO_PATH = dados_path("recentes.json")
+SERIE_HISTORICA_PATH = dados_path("Serie_historica.xlsx")
 MAX_HISTORICO = 30
 
 
@@ -199,6 +200,7 @@ class UploadPage(QWidget):
                 with open(HISTORICO_PATH, "r", encoding="utf-8") as f:
                     return json.load(f)
             except Exception:
+                logging.exception("Falha ao carregar histórico de %s", HISTORICO_PATH)
                 return []
         return []
 
@@ -239,7 +241,11 @@ class UploadPage(QWidget):
             try:
                 os.remove(HISTORICO_PATH)
             except Exception:
-                pass
+                logging.exception("Falha ao apagar histórico em %s", HISTORICO_PATH)
+                QMessageBox.warning(
+                    self, "Aviso",
+                    "Não foi possível apagar o arquivo de histórico (veja erro_log.txt).",
+                )
         self._carregar_painel_recentes()
 
     def _salvar_historico(self):
@@ -250,7 +256,7 @@ class UploadPage(QWidget):
             with open(HISTORICO_PATH, "w", encoding="utf-8") as f:
                 json.dump(lista_final, f, ensure_ascii=False)
         except Exception:
-            pass
+            logging.exception("Falha ao salvar histórico em %s", HISTORICO_PATH)
 
     # ---------------- SÉRIE HISTÓRICA ----------------
     def _abrir_serie_historica(self):

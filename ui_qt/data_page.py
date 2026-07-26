@@ -1,4 +1,5 @@
 """Tela 2: Dados Brutos - tabela completa extraída, com ordenação, filtro e cópia."""
+import logging
 import os
 
 import pandas as pd
@@ -11,8 +12,9 @@ from PySide6.QtWidgets import (
 
 from ui_qt.dialogs import FilterDialog, DialogoExportacao
 from ui_qt.delegates import SelecaoForteDelegate
+from ui_qt.main_window import dados_path
 
-SERIE_HISTORICA_PATH = "Serie_historica.xlsx"
+SERIE_HISTORICA_PATH = dados_path("Serie_historica.xlsx")
 
 
 def _formatar_valor(v):
@@ -215,6 +217,7 @@ class DataPage(QWidget):
                 ["Hospital/Prestador", "Mês/Ano", "Âmbito Serviço"]
             ].drop_duplicates().values.tolist()
         except Exception:
+            logging.exception("Falha ao calcular resumo para checagem de duplicados no histórico")
             novos_dados_resumo = []
 
         msg = f"Deseja adicionar {len(self.df_orig)} registros ao arquivo '{SERIE_HISTORICA_PATH}'?"
@@ -242,8 +245,8 @@ class DataPage(QWidget):
                             "Deseja substituir os dados antigos pelos novos?"
                         )
                         substituir = True
-            except Exception as e:
-                print(f"Erro ao ler histórico para verificação: {e}")
+            except Exception:
+                logging.exception("Erro ao ler histórico para verificação em %s", SERIE_HISTORICA_PATH)
 
         resposta = QMessageBox.question(self, "Confirmar Histórico", msg)
         if resposta != QMessageBox.Yes:
@@ -270,7 +273,7 @@ class DataPage(QWidget):
                 from prod_SIA_SIH2xlsx import formatar_excel_como_tabela
                 formatar_excel_como_tabela(SERIE_HISTORICA_PATH)
             except Exception:
-                pass
+                logging.exception("Falha ao formatar %s como tabela", SERIE_HISTORICA_PATH)
 
             acao = "criado" if novo_arquivo else ("atualizado (substituição)" if substituir else "atualizado (adição)")
             QMessageBox.information(

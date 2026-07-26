@@ -1,5 +1,6 @@
 """Tela 3: Tabela Dinâmica - builder de pivot (campos, filtros, templates, tema)."""
 import json
+import logging
 
 import pandas as pd
 from PySide6.QtCore import Qt
@@ -12,11 +13,11 @@ from PySide6.QtWidgets import (
 )
 
 from ui_qt import theme
-from ui_qt.main_window import resource_path
+from ui_qt.main_window import dados_path
 from ui_qt.dialogs import FilterDialog, DialogoExportacao
 from ui_qt.delegates import SelecaoForteDelegate
 
-TEMPLATES_PATH = resource_path("templates.json")
+TEMPLATES_PATH = dados_path("templates.json")
 
 # Cor de texto FIXA da árvore da Tabela Dinâmica — independe do tema geral do
 # app, pois o fundo das células (PIVOT_PALETTES) é sempre claro; num tema
@@ -50,19 +51,24 @@ def _carregar_templates():
     try:
         with open(TEMPLATES_PATH, "r", encoding="utf-8") as f:
             defaults.update(json.load(f))
-    except Exception:
+    except FileNotFoundError:
         pass
+    except Exception:
+        logging.exception("Falha ao carregar templates de %s", TEMPLATES_PATH)
     if not defaults:
         defaults = {"1. Resumo": {"rows": ["Hospital/Prestador"], "cols": [], "filters": {}}}
     return defaults
 
 
 def _salvar_templates(templates):
+    """Grava templates.json; retorna True em caso de sucesso."""
     try:
         with open(TEMPLATES_PATH, "w", encoding="utf-8") as f:
             json.dump(templates, f, indent=4, ensure_ascii=False)
+        return True
     except Exception:
-        pass
+        logging.exception("Falha ao salvar templates em %s", TEMPLATES_PATH)
+        return False
 
 
 class PivotPage(QWidget):
@@ -290,7 +296,12 @@ class PivotTab(QWidget):
             "cols": list(self.active_cols),
             "filters": {c: list(v) for c, v in self.active_filters.items()},
         }
-        _salvar_templates(self.templates)
+        if not _salvar_templates(self.templates):
+            QMessageBox.warning(
+                self, "Aviso",
+                f"O modelo '{nome.strip()}' foi criado nesta sessão, mas não\n"
+                f"foi possível gravá-lo em disco (veja erro_log.txt).",
+            )
         self._render_templates()
 
     def _aplicar_template(self, nome):
